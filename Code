@@ -1,0 +1,124 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+import bs4
+import textblob
+
+r = requests.get('url')
+
+soup = BeautifulSoup(r.content, 'html.parser')
+
+s = soup.find('div', class_='td-post-content tagdiv-type')
+
+lines = s.find_all(['p', 'li'])
+
+
+for line in lines:
+ print(line.text)
+
+import nltk
+
+nltk.download('punkt')
+nltk.download('cmudict')
+
+from nltk.tokenize import sent_tokenize, word_tokenize
+
+text = """
+put the website text
+"""
+sentence = sent_tokenize(text)
+
+!pip install vaderSentiment
+
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+def analyze_sentiment(text):
+    sia = SentimentIntensityAnalyzer()
+    sentiment_scores = sia.polarity_scores(text)
+    return sentiment_scores['compound'], sentiment_scores['pos'], sentiment_scores['neg']
+
+
+polarity_score, positive_score, negative_score = analyze_sentiment(text)
+
+# Print the result
+print(f"Polarity Score: {polarity_score}")
+print(f"Positive Score: {positive_score}")
+print(f"Negative Score: {negative_score}")
+
+from textblob import TextBlob
+
+def calculate_subjectivity(text):
+    blob = TextBlob(text)
+
+    subjectivity_score = blob.sentiment.subjectivity
+
+    return subjectivity_score
+
+
+subjectivity_score = calculate_subjectivity(text)
+
+print(f"Subjectivity Score: {subjectivity_score}")
+
+from nltk.corpus import cmudict
+from textblob import TextBlob
+
+def calculate_metrics(text):
+    # Create a TextBlob object
+    blob = TextBlob(text)
+
+    # Sentiment analysis
+    sentiment = blob.sentiment_assessments
+
+    # Tokenize the text into sentences
+    sentences = sent_tokenize(text)
+
+    # Tokenize the text into words
+    words = word_tokenize(text)
+
+    words_per_sentence = [len(word_tokenize(sentence)) for sentence in sentences]
+
+    avg_words_per_sentence = sum(words_per_sentence) / len(words_per_sentence)
+
+    avg_sentence_length = sum(len(word_tokenize(sentence)) for sentence in sentences) / len(sentences)
+
+    # Count the number of complex words (words with more than two syllables)
+    cmu_dict = cmudict.dict()
+    complex_word_count = sum(1 for word in words if len(cmu_dict.get(word.lower(), [])) > 2)
+
+    # Calculate the percentage of complex words
+    percentage_complex_words = (complex_word_count / len(words)) * 100
+
+    # Calculate the Fog index
+    fog_index = 0.4 * (avg_sentence_length + percentage_complex_words)
+
+    # Calculate average word length
+    avg_word_length = sum(len(word) for word in words) / len(words)
+
+    # Count the number of personal pronouns
+    personal_pronouns = sum(1 for word in words if word.lower() in ['i', 'me', 'my', 'mine', 'myself', 'we', 'us', 'our', 'ours', 'ourselves'])
+
+    # Calculate the average number of syllables per word
+    syllable_count = sum(len(cmu_dict.get(word.lower(), [0])) for word in words)
+    syllables_per_word = syllable_count / len(words)
+
+    # Return the calculated metrics
+    return {
+        'avg_words_per_sentence': avg_words_per_sentence,
+        'percentage_complex_words': percentage_complex_words,
+        'fog_index': fog_index,
+        'avg_word_length': avg_word_length,
+        'complex_word_count': complex_word_count,
+        'word_count': len(words),
+        'syllables_per_word': syllables_per_word,
+        'personal_pronouns': personal_pronouns,
+        'avg_sentence_length': avg_sentence_length
+    }
+
+
+metrics = calculate_metrics(text)
+
+# Print the result
+for metric, value in metrics.items():
+    print(f"{metric}: {value}")
+
